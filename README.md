@@ -1,4 +1,4 @@
-﻿# AI Automation Portfolio
+﻿# Portfolio
 
 A full-stack portfolio website built with a React frontend and a Node.js/Express backend.
 It includes a production-ready contact form with validation, rate limiting, optional CAPTCHA, email delivery via Resend, backend tests, and CI.
