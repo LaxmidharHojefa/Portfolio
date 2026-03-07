@@ -1,0 +1,25 @@
+﻿# dependencies
+node_modules/
+
+# env files
+.env
+.env.*
+!.env.example
+
+# local contact submission storage
+data/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# test artifacts
+coverage/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
