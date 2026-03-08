@@ -19,6 +19,43 @@ function cleanString(input) {
   return String(input || "").trim();
 }
 
+function normalizeOrigin(origin) {
+  const value = cleanString(origin).replace(/\/+$/, "");
+  if (!value) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(value);
+    return `${parsed.protocol}//${parsed.host}`.toLowerCase();
+  } catch {
+    return value.toLowerCase();
+  }
+}
+
+function createOriginMatcher(originPattern) {
+  const pattern = normalizeOrigin(originPattern);
+  if (!pattern) {
+    return null;
+  }
+
+  if (!pattern.includes("*")) {
+    return {
+      type: "exact",
+      value: pattern,
+    };
+  }
+
+  const escaped = pattern
+    .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*");
+
+  return {
+    type: "regex",
+    value: new RegExp(`^${escaped}$`, "i"),
+  };
+}
+
 function resolveTrustProxySetting(value) {
   if (value === "true") {
     return true;
@@ -94,9 +131,9 @@ export function createApp() {
 
   const rawOrigins = process.env.FRONTEND_ORIGIN || "http://localhost:5173,http://127.0.0.1:5173";
   const trustProxyRaw = String(process.env.TRUST_PROXY || "0").trim().toLowerCase();
-  const allowedOrigins = rawOrigins
+  const originMatchers = rawOrigins
     .split(",")
-    .map((origin) => origin.trim())
+    .map((origin) => createOriginMatcher(origin))
     .filter(Boolean);
 
   const resendApiKey = process.env.RESEND_API_KEY || "";
@@ -193,10 +230,25 @@ export function createApp() {
     cors({
       origin(origin, callback) {
         // Allow server-to-server tools (no origin) and configured frontend origins.
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin) {
           callback(null, true);
           return;
         }
+
+        const normalizedOrigin = normalizeOrigin(origin);
+        const isAllowed = originMatchers.some((matcher) => {
+          if (matcher.type === "exact") {
+            return matcher.value === normalizedOrigin;
+          }
+
+          return matcher.value.test(normalizedOrigin);
+        });
+
+        if (isAllowed) {
+          callback(null, true);
+          return;
+        }
+
         callback(new Error("Origin not allowed by CORS"));
       },
       methods: ["GET", "POST", "OPTIONS"],

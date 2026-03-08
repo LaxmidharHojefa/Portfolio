@@ -124,7 +124,7 @@ Recommended setup:
 
 Set these in production:
 
-- Backend `FRONTEND_ORIGIN` to your Vercel domain
+- Backend `FRONTEND_ORIGIN` to your Vercel domain (or `https://*.vercel.app` for preview domains)
 - Backend `TRUST_PROXY=1` (behind platform proxy)
 - Frontend `VITE_BACKEND_URL` to your Render backend URL
 
